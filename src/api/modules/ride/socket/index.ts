@@ -1,15 +1,18 @@
 import { Server, Socket } from "socket.io";
+import { fetchAllOnlineDrivers, addDriverToRedis } from "../helpers";
+import { IDriver } from "utils/types";
 
 export const socketHandler = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("A user connected:", socket.id);
 
-    //what happens when a driver goes online
-        //we store the current location of the driver and we create a room for him with his socket id
+    socket.on("getOnlineDrivers", async () => {
+      const drivers = await fetchAllOnlineDrivers();
+      socket.emit("onlineDrivers", drivers);
+    });
 
-    socket.on("goOnline", ({driverId, longitude, latitude}) => {
-      console.log("Received example_event:", data);
-      socket.emit("example_response", { success: true });
+    socket.on("goOnline", (driver: IDriver) => {
+      addDriverToRedis(driver);
     });
 
     socket.on("disconnect", () => {
