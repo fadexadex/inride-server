@@ -6,13 +6,27 @@ export const socketHandler = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("A user connected:", socket.id);
 
+    //riders event listeners
     socket.on("getOnlineDrivers", async () => {
-      const drivers = await fetchAllOnlineDrivers();
-      socket.emit("onlineDrivers", drivers);
+      try {
+        const drivers = await fetchAllOnlineDrivers();
+        socket.emit("onlineDrivers", { success: true, drivers });
+      } catch (error) {
+        console.error("Error fetching online drivers:", error);
+        socket.emit("onlineDrivers", {
+          success: false,
+          message: "Failed to fetch online drivers.",
+        });
+      }
     });
-
-    socket.on("goOnline", (driver: IDriver) => {
-      addDriverToRedis(driver);
+    //drivers event listeners
+    socket.on("goOnline", async (driver: IDriver) => {
+      try {
+        await addDriverToRedis(driver);
+        socket.broadcast.emit("newDriverOnline", driver);
+      } catch (error) {
+        console.error("Error adding driver to Redis:", error);
+      }
     });
 
     socket.on("disconnect", () => {

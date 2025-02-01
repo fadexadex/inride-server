@@ -44,7 +44,7 @@ export class AppServer {
     this.enableMiddlewares();
     this.setUpRoutes();
     this.setUpSocket();
-    // this.startRedis();
+    this.startRedis();
     this.server.listen(this.port, () => {
       console.log(`Server is running on port ${this.port}`);
     });
