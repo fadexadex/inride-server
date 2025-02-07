@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { IRideResponseData } from "../../../../utils/types";
 import { getSocketId } from "../helpers";
-
+import { v4 as uuidv4 } from 'uuid';
 
 const handleRideResponse = async (
   io: Server,
@@ -16,10 +16,11 @@ const handleRideResponse = async (
 
     if (accepted) {
 
+      requestDetails.rideId = uuidv4();
+
       if (riderSocketId) {
         io.to(riderSocketId).emit("rideConfirmed", {
           message: "Your ride request has been accepted!",
-          rideId : 
           requestDetails,
         });
       }

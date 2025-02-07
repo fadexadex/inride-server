@@ -29,6 +29,7 @@ export interface IRideResponseData {
 }
 
 export interface IRequestDetails {
+  rideId?: string;
   location: ICoOrdinates;
   locationTitle: string;
   destination: ICoOrdinates;

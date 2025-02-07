@@ -28,18 +28,18 @@ export const socketHandler = (io: Server) => {
       handleRideResponse(io, socket, data);
     });
 
-    
+    socket.on("rideConfirmed", ({ rideId }) => {
+      const rideRoom = `ride:${rideId}`;
+      socket.join(rideRoom);
+      socket.emit("joinedRideRoom", { rideRoom });
+      console.log(`Socket ${socket.id} joined ride room ${rideRoom}`);
+    });
 
-
-    // socket.on("startRideMatching", ({ clientId, driverId }) => {
-    //   const room = `room:${driverId}`;
-
-    //   const riderSocket = io.sockets.sockets.get(clientId);
-
-    //   if (riderSocket) {
-    //     riderSocket.join(room);
-    //   }
-    // });
+    socket.on("locationUpdate", ({ rideId, role, location }) => {
+      const rideRoom = `ride:${rideId}`;
+      // Broadcast location update to everyone in the ride room
+      io.to(rideRoom).emit("locationUpdate", { role, location });
+    });
 
 
     //drivers event listeners
