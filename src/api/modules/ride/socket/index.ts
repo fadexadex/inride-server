@@ -37,7 +37,6 @@ export const socketHandler = (io: Server) => {
 
     socket.on("locationUpdate", ({ rideId, role, location }) => {
       const rideRoom = `ride:${rideId}`;
-      // Broadcast location update to everyone in the ride room
       io.to(rideRoom).emit("locationUpdate", { role, location });
     });
 
