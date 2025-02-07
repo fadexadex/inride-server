@@ -8,14 +8,29 @@ declare global {
   }
 }
 
-export interface IDriver{
+export interface ICoOrdinates {
+  lon: number;
+  lat: number;
+}
+
+export interface IDriver {
   driverId: string;
   driverName: string;
   driverPhone: string;
   carType: string;
-  coOrdinates?: {
-    lon: number;
-    lat: number;
-  }
+  coOrdinates?: ICoOrdinates;
+}
 
+export interface IRideResponseData {
+  accepted: boolean;
+  driverId: string;
+  riderId: string;
+  requestDetails: IRequestDetails;
+}
+
+export interface IRequestDetails {
+  location: ICoOrdinates;
+  locationTitle: string;
+  destination: ICoOrdinates;
+  destinationTitle: string;
 }

@@ -1,32 +1,50 @@
 import { Server, Socket } from "socket.io";
-import { fetchAllOnlineDrivers, addDriverToRedis } from "../helpers";
-import { IDriver } from "utils/types";
+import goOnline from "./driver/goOnline";
+import getOnlineDrivers from "./driver/getOnlineDrivers";
+import requestRide from "./rider/requestRide";
+import handleRideResponse from "./handleRideResponse";
+import { storeDriverOrRiderSocketId, takeDriverOffline } from "../helpers";
 
 export const socketHandler = (io: Server) => {
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async (socket: Socket) => {
     console.log("A user connected:", socket.id);
+    // map userId to socket id
+    const { role, userId } = socket.handshake.query;
+    if (typeof userId === "string" && typeof role === "string") {
+      await storeDriverOrRiderSocketId(socket.id, userId, role);
+    }
 
     //riders event listeners
-    socket.on("getOnlineDrivers", async () => {
-      try {
-        const drivers = await fetchAllOnlineDrivers();
-        socket.emit("onlineDrivers", { success: true, drivers });
-      } catch (error) {
-        console.error("Error fetching online drivers:", error);
-        socket.emit("onlineDrivers", {
-          success: false,
-          message: "Failed to fetch online drivers.",
-        });
-      }
+    socket.on("getOnlineDrivers", () => {
+      getOnlineDrivers(socket);
     });
+
+    socket.on("rideRequest", ({ driverId, riderId, rideDetails }) => {
+      requestRide(io, socket, driverId, riderId, rideDetails);
+    });
+
+    //other 
+    socket.on("rideResponse", (data) => {
+      handleRideResponse(io, socket, data);
+    });
+
+    
+
+
+    // socket.on("startRideMatching", ({ clientId, driverId }) => {
+    //   const room = `room:${driverId}`;
+
+    //   const riderSocket = io.sockets.sockets.get(clientId);
+
+    //   if (riderSocket) {
+    //     riderSocket.join(room);
+    //   }
+    // });
+
+
     //drivers event listeners
-    socket.on("goOnline", async (driver: IDriver) => {
-      try {
-        await addDriverToRedis(driver);
-        socket.broadcast.emit("newDriverOnline", driver);
-      } catch (error) {
-        console.error("Error adding driver to Redis:", error);
-      }
+    socket.on("goOnline", (driver) => {
+      goOnline(socket, driver);
     });
 
     socket.on("disconnect", () => {
