@@ -12,7 +12,7 @@ const handleRideResponse = async (
 
   try {
     const riderSocketId = await getSocketId("rider", riderId);
-    const driverSocketId = await getSocketId(driverId, "driver");
+    const driverSocketId = await getSocketId("driver",driverId);
 
     if (accepted) {
 

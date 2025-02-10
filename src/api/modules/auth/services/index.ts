@@ -2,8 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import AuthRepo from "../authRepo";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { AppError } from "../../../middlewares/errorHandler";
-import { hashPassword } from "../../../../utils/bcrypt";
+import { hashPassword, comparePassword } from "../../../../utils/bcrypt";
 import sanitizeUserAndGrantToken from "../../../../utils/sanitize";
+import { ILoginBody } from "../../../../utils/types";
 
 const authRepo = new AuthRepo();
 
@@ -27,4 +28,17 @@ const registerUser = async (
   return sanitizeUserAndGrantToken(createdUser);
 };
 
-export { registerUser };
+const loginUser = async (loginBody: ILoginBody) => {
+  const { email, password } = loginBody;
+  const user = await authRepo.getUserByEmail(email);
+  if (!user) {
+    throw new AppError("Invalid email or password", StatusCodes.UNAUTHORIZED);
+  }
+  const isPasswordValid = await comparePassword(password, user.password);
+  if (!isPasswordValid) {
+    throw new AppError("Invalid email or password", StatusCodes.UNAUTHORIZED);
+  }
+  return sanitizeUserAndGrantToken(user);
+};
+
+export { registerUser, loginUser };

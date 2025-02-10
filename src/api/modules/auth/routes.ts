@@ -1,10 +1,11 @@
-import { register } from "./controllers";
+import { login, register } from "./controllers";
 import { Router } from "express";
 import upload from "../../../utils/multer";
 import { validateRegisterBody } from "../../middlewares/validators";
 
 const router = Router();
 
+//come back to protect routes
 router.post(
   "/register",
   upload.fields([
@@ -14,5 +15,7 @@ router.post(
   validateRegisterBody,
   register
 );
+
+router.post("/login", login);
 
 export default router;

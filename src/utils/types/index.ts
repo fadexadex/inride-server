@@ -35,3 +35,8 @@ export interface IRequestDetails {
   destination: ICoOrdinates;
   destinationTitle: string;
 }
+
+export interface ILoginBody {
+  email: string;
+  password: string;
+}

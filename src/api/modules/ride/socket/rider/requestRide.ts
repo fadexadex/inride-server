@@ -1,18 +1,20 @@
 import { Server, Socket } from "socket.io";
-import redisService from "utils/redis";
+import redisService from "../../../../../utils/redis";
 import { IRequestDetails } from "utils/types";
 import { getSocketId } from "../../helpers";
 
 const requestRide = async (
   io: Server,
   socket: Socket,
-  riderId: string,
   driverId: string,
+  riderId: string,
+
   requestDetails: IRequestDetails
 ) => {
   try {
     const temporaryLockKey = `driver:lock${driverId}`;
     const driverIsLocked = await redisService.client.get(temporaryLockKey);
+    console.log("Driver is locked:", driverIsLocked);
     if (driverIsLocked) {
       throw new Error("Driver is already booked or pending another request");
     }
@@ -20,17 +22,19 @@ const requestRide = async (
       EX: 30,
     });
 
-    const driverSocketId = await getSocketId(driverId, "driver");
+    const driverSocketId = await getSocketId("driver", driverId);
+    console.log("Driver socket ID:", driverSocketId);
 
     io.to(driverSocketId).emit("incomingRequest", {
       message: "New ride request",
       requestDetails,
-      clientId: socket.id,
+      riderId,
     });
 
     const riderSocketId = await getSocketId("rider", riderId);
+    console.log("Rider socket ID:", riderSocketId);
 
-    socket.to(riderSocketId).emit("rideRequestPending", {
+    io.to(riderSocketId).emit("rideRequestPending", {
       message: "Your request has been sent, waiting for driver to accept",
     });
   } catch (error) {

@@ -1,4 +1,4 @@
-import { registerUser } from "../services";
+import { registerUser, loginUser } from "../services";
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import uploadImageToCloudinary from "../../../../utils/uploadImageToCloud";
@@ -6,7 +6,7 @@ import uploadImageToCloudinary from "../../../../utils/uploadImageToCloud";
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    
+
     if (files && Object.keys(files).length === 2) {
       const licensePath = files?.["license"]?.[0]?.path;
       const facePath = files?.["face"]?.[0]?.path;
@@ -17,16 +17,29 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
         req.body.driverDetails.faceUrl = faceUrl;
       }
     }
-    const user = await registerUser(req.body);
-    res.header("Authorization", `Bearer ${user.token}`);
+    const { userData, token } = await registerUser(req.body);
+    res.header("Authorization", `Bearer ${token}`);
     res.status(StatusCodes.CREATED).json({
       status: "success",
-      data: user.userData,
+      data: userData,
       message: "User registered successfully",
     });
   } catch (error) {
     next(error);
   }
 };
+const login = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userData, token } = await loginUser(req.body);
+    res.header("Authorization", `Bearer ${token}`);
+    res.status(StatusCodes.OK).json({
+      status: "success",
+      data: userData,
+      message: "User logged in successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-export { register };
+export { register , login};

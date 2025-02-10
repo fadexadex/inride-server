@@ -6,7 +6,7 @@ const goOnline = async (socket: Socket, driver: IDriver) => {
   try {
     await addDriverToRedis(driver);
 
-    socket.join(`room:${driver.driverId}`);
+    // socket.join(`room:${driver.driverId}`);
 
     socket.broadcast.emit("newDriverOnline", driver);
 

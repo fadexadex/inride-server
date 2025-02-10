@@ -3,31 +3,40 @@ import goOnline from "./driver/goOnline";
 import getOnlineDrivers from "./driver/getOnlineDrivers";
 import requestRide from "./rider/requestRide";
 import handleRideResponse from "./handleRideResponse";
-import { storeDriverOrRiderSocketId, takeDriverOffline } from "../helpers";
+import {
+  removeDriverOrRiderSocketId,
+  storeDriverOrRiderSocketId,
+} from "../helpers";
 
 export const socketHandler = (io: Server) => {
   io.on("connection", async (socket: Socket) => {
     console.log("A user connected:", socket.id);
-    // map userId to socket id
     const { role, userId } = socket.handshake.query;
     if (typeof userId === "string" && typeof role === "string") {
       await storeDriverOrRiderSocketId(socket.id, userId, role);
     }
 
-    //riders event listeners
+    // ──► Driver goes online
+    socket.on("goOnline", async (driver) => {
+      goOnline(socket, driver);
+    });
+
+    // ──► Rider requests list of online drivers
     socket.on("getOnlineDrivers", () => {
       getOnlineDrivers(socket);
     });
 
+    // ──► Rider sends a ride request to a driver
     socket.on("rideRequest", ({ driverId, riderId, rideDetails }) => {
       requestRide(io, socket, driverId, riderId, rideDetails);
     });
 
-    //other 
+    // ──► Driver responds to ride request
     socket.on("rideResponse", (data) => {
       handleRideResponse(io, socket, data);
     });
 
+    // ──► Ride confirmed: both parties join the ride room
     socket.on("rideConfirmed", ({ rideId }) => {
       const rideRoom = `ride:${rideId}`;
       socket.join(rideRoom);
@@ -35,19 +44,19 @@ export const socketHandler = (io: Server) => {
       console.log(`Socket ${socket.id} joined ride room ${rideRoom}`);
     });
 
+    // ──► Streaming location updates within the ride room
     socket.on("locationUpdate", ({ rideId, role, location }) => {
       const rideRoom = `ride:${rideId}`;
       io.to(rideRoom).emit("locationUpdate", { role, location });
     });
 
-
-    //drivers event listeners
-    socket.on("goOnline", (driver) => {
-      goOnline(socket, driver);
-    });
-
-    socket.on("disconnect", () => {
+    // ──► Handle disconnection
+    socket.on("disconnect", async () => {
       console.log("A user disconnected:", socket.id);
+      const { role, userId } = socket.handshake.query;
+      if (typeof userId === "string" && typeof role === "string") {
+        await removeDriverOrRiderSocketId(userId, role);
+      }
     });
   });
 };

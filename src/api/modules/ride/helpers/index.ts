@@ -15,13 +15,27 @@ const storeDriverOrRiderSocketId = async (
   console.log(`Mapped ${role} ${userId} to socket ${socketId}`);
 };
 
+const removeDriverOrRiderSocketId = async (
+  userId: string,
+  role: string
+) => {
+  if (role === "driver") {
+    await redisService.client.del(`driver:${userId}`);
+  } else {
+    await redisService.client.del(`rider:${userId}`);
+  }
+  console.log(`Deleted ${role} ${userId}`);
+};
+
 const getSocketId = async (role: string, id: string) => {
+  console.log(`Fetching socket ID for ${role}:${id}`);
   return await redisService.client.get(`${role}:${id}`);
 };
 
 const addDriverToRedis = async (driver: IDriver) => {
   try {
     const driverData = {
+      id: driver.driverId,
       driverName: driver.driverName,
       driverPhone: driver.driverPhone,
       carType: driver.carType,
@@ -89,4 +103,5 @@ export {
   takeDriverOffline,
   getSocketId,
   storeDriverOrRiderSocketId,
+  removeDriverOrRiderSocketId
 };

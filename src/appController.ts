@@ -6,8 +6,16 @@ import authRoutes from "./api/modules/auth/routes";
 import http from "http";
 import { Server } from "socket.io";
 import { socketHandler } from "./api/modules/ride/socket";
+import cors from "cors";
 
 dotenv.config();
+
+interface IcorsOptions {
+  origin: string;
+  credentials: boolean;
+  methods: string[];
+  allowHeaders: string[];
+}
 
 export class AppServer {
   private app: express.Application;
@@ -15,16 +23,24 @@ export class AppServer {
   private server: http.Server;
   private io: Server;
 
+  private readonly corsOptions = {
+    origin: "*", 
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
+
   constructor(port: number) {
     this.port = port;
     this.app = express();
     this.server = http.createServer(this.app);
-    this.io = new Server(this.server);
+    this.io = new Server(this.server, { cors: this.corsOptions });
   }
 
   private enableMiddlewares() {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(cors(this.corsOptions));
   }
 
   private setUpRoutes() {
@@ -33,7 +49,7 @@ export class AppServer {
   }
 
   private setUpSocket() {
-   socketHandler(this.io)
+    socketHandler(this.io);
   }
 
   private startRedis() {
