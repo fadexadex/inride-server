@@ -5,7 +5,7 @@ import { validateRegisterBody } from "../../middlewares/validators";
 
 const router = Router();
 
-//come back to protect routes
+
 router.post(
   "/register",
   upload.fields([

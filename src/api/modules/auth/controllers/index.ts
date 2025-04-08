@@ -2,6 +2,7 @@ import { registerUser, loginUser } from "../services";
 import { StatusCodes } from "http-status-codes";
 import { Request, Response, NextFunction } from "express";
 import uploadImageToCloudinary from "../../../../utils/uploadImageToCloud";
+import { AppError } from "../../../middlewares/errorHandler";
 
 const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -15,8 +16,13 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
         const faceUrl = await uploadImageToCloudinary(facePath);
         req.body.driverDetails.licenseUrl = licenseUrl;
         req.body.driverDetails.faceUrl = faceUrl;
+      } else {
+        throw new AppError("License and Face path absent", 400);
       }
+    } else {
+      throw new AppError("Face and License Image is required", 400);
     }
+
     const { userData, token } = await registerUser(req.body);
     res.header("Authorization", `Bearer ${token}`);
     res.status(StatusCodes.CREATED).json({
@@ -42,4 +48,4 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { register , login};
+export { register, login };
