@@ -19,8 +19,6 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
       } else {
         throw new AppError("License and Face path absent", 400);
       }
-    } else {
-      throw new AppError("Face and License Image is required", 400);
     }
 
     const { userData, token } = await registerUser(req.body);

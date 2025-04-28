@@ -45,6 +45,7 @@ export class AppServer {
 
   private setUpRoutes() {
     this.app.use("/api/auth", authRoutes);
+    
     this.app.use(errorHandler);
   }
 
